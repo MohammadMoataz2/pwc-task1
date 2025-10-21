@@ -17,11 +17,16 @@ if is_authenticated():
 st.title("🔐 Login")
 st.markdown("Welcome to PWC Contract Analysis System")
 
+# Add info about session persistence
+st.info("💡 **Note:** Due to Streamlit's architecture, you'll need to log in again after refreshing the page. We recommend avoiding page refreshes during your session.")
+
 with st.form("login_form"):
     st.subheader("Sign In")
 
     username = st.text_input("Username", placeholder="Enter your username")
     password = st.text_input("Password", type="password", placeholder="Enter your password")
+
+    remember_me = st.checkbox("Remember me (keeps you logged in after page refresh)", value=False)
 
     col1, col2 = st.columns(2)
 
@@ -37,7 +42,7 @@ if login_btn:
         st.error("Please enter both username and password")
     else:
         with st.spinner("Logging in..."):
-            if login(username, password):
+            if login(username, password, remember_me):
                 st.rerun()
 
 # Demo credentials info

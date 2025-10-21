@@ -150,15 +150,17 @@ if is_authenticated():
 
         # Quick health check
         try:
-            from utils.api_client import APIClient
+            import requests
+            from config import API_BASE_URL
 
-            health_response = APIClient.get("/healthz")
+            # Health endpoints are at root level, not /api/v1
+            health_response = requests.get(f"{API_BASE_URL}/healthz")
             if health_response.status_code == 200:
                 st.success("✅ System Healthy")
             else:
                 st.error("❌ System Issues Detected")
 
-            ready_response = APIClient.get("/readyz")
+            ready_response = requests.get(f"{API_BASE_URL}/readyz")
             if ready_response.status_code == 200:
                 st.success("✅ System Ready")
             else:

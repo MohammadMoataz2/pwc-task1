@@ -391,7 +391,11 @@ with tab3:
     with col1:
         st.subheader("🏥 Liveness Check")
         try:
-            response = APIClient.get("/healthz")
+            # Health endpoints are at root level, not /api/v1
+            import requests
+            from config import API_BASE_URL
+
+            response = requests.get(f"{API_BASE_URL}/healthz")
             if response.status_code == 200:
                 st.success("✅ System is alive and running")
                 health_data = response.json()
@@ -404,7 +408,11 @@ with tab3:
     with col2:
         st.subheader("🔧 Readiness Check")
         try:
-            response = APIClient.get("/readyz")
+            # Health endpoints are at root level, not /api/v1
+            import requests
+            from config import API_BASE_URL
+
+            response = requests.get(f"{API_BASE_URL}/readyz")
             if response.status_code == 200:
                 st.success("✅ System is ready to serve requests")
                 readiness_data = response.json()
