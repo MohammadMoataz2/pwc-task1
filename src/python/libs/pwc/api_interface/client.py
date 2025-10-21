@@ -35,7 +35,7 @@ class APIClient:
             await self._client.aclose()
 
     def _get_url(self, path: str) -> str:
-        return f"{self.base_url}/contracts/{path}"
+        return f"{self.base_url}/api/v1/contracts/{path}"
 
     async def _make_request(self, method: str, path: str, **kwargs) -> httpx.Response:
         """Make HTTP request with error handling and retries"""

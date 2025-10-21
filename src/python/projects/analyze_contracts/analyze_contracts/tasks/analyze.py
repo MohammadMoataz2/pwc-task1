@@ -31,7 +31,7 @@ ai_client = AIFactory.create_client(
 )
 
 # API client for callbacks
-api_client = APIClient(base_url="http://localhost:8000")  # TODO: Get from settings
+api_client = APIClient(base_url=settings.api_base_url)
 
 
 @celery_app.task(bind=True)

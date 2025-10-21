@@ -12,6 +12,7 @@ class Settings(BaseSettings):
 
     # API
     api_v1_prefix: str = "/api/v1"
+    api_base_url: str = Field(default="http://api:8000")  # URL for worker callbacks
     secret_key: str = Field(default="your-secret-key-change-this")
     access_token_expire_minutes: int = 30
 

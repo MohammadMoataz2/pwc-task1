@@ -95,9 +95,12 @@ services:
     volumes:
       - api_storage:/app/storage
     depends_on:
-      - mongodb
-      - redis
-      - api
+      api:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+      redis:
+        condition: service_started
     networks:
       - pwc_network
 

@@ -30,7 +30,7 @@ class AnalyzeContractExecutor(ContractTaskExecutor):
             )
 
             # Read contract file
-            file_content = await storage.read(contract["file_path"])
+            file_content = await storage.load(contract["file_path"])
 
             # Initialize AI client (using existing GenAI factory)
             ai_client = AIFactory.create_client(

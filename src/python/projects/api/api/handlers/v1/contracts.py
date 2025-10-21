@@ -9,7 +9,7 @@ from ...db.models import Contract, Client
 from pwc.task_interface.schema import ContractState
 from pwc.storage import StorageFactory
 from pwc.settings import settings
-from pwc.workflows import create_analysis_workflow
+from ...core.celery_app import celery_app
 from ...core.security import generate_internal_token
 
 router = APIRouter()
@@ -241,23 +241,37 @@ async def trigger_genai_analysis(
             detail="Contract not found"
         )
 
-    if contract.status not in [ContractState.pending.value, ContractState.failed.value]:
+    # Allow analysis for pending, failed, and completed contracts
+    allowed_states = [
+        ContractState.pending.value,
+        ContractState.failed.value,
+        ContractState.completed.value
+    ]
+
+    if contract.status not in allowed_states:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Contract is not in a state that allows analysis"
+            detail=f"Contract is not in a state that allows analysis. Current state: {contract.status}. Allowed states: {allowed_states}"
         )
 
     # Generate internal token for worker communication
     internal_token = generate_internal_token()
 
-    # Create workflow using the shared library pattern
-    api_base_url = f"http://localhost:8000"  # API URL for workers to call back
+    # Create analysis workflow chain
+    from uuid import uuid4
+    from celery import chain
 
-    pipeline, run_id = create_analysis_workflow(
-        contract_id=str(contract.id),
-        api_base_url=api_base_url,
-        internal_token=internal_token
-    )
+    # Generate run ID
+    run_id = str(uuid4())
+
+    # Create task info for the worker
+    task_info_dict = {
+        "run_id": run_id,
+        "contract_id": str(contract.id),
+        "storage_root_path": str(settings.local_storage_path + "/contracts/" + str(contract.id) + "/" + run_id),
+        "api_auth_token": internal_token,
+        "api_base_url": settings.api_base_url
+    }
 
     # Add pipeline run to contract
     pipeline_run = {
@@ -270,8 +284,17 @@ async def trigger_genai_analysis(
     contract.updated_at = datetime.now(timezone.utc)
     await contract.save()
 
+    # Create and execute the analysis pipeline using immutable signatures
+    # This prevents tasks from receiving previous task results as arguments
+    pipeline = chain(
+        celery_app.signature("contract_analysis.change_state", args=[ContractState.processing.value, task_info_dict], immutable=True),
+        celery_app.signature("contract_analysis.analyze_clauses", args=[task_info_dict], immutable=True),
+        celery_app.signature("contract_analysis.evaluate_health", args=[task_info_dict], immutable=True),
+        celery_app.signature("contract_analysis.change_state", args=[ContractState.completed.value, task_info_dict], immutable=True)
+    )
+
     # Execute the pipeline asynchronously
-    async_result = pipeline.delay()
+    async_result = pipeline.apply_async()
 
     return {
         "message": "Analysis pipeline triggered",
