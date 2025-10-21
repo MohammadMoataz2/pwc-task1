@@ -91,6 +91,9 @@ services:
       - AI_PROVIDER=openai
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - API_BASE_URL=http://api:8000
+      - PARSING_PROVIDER=${PARSING_PROVIDER:-library}
+      - ANALYSIS_PROVIDER=${ANALYSIS_PROVIDER:-openai}
+      - EVALUATION_PROVIDER=${EVALUATION_PROVIDER:-openai}
     volumes:
       - api_storage:/app/storage
     depends_on:
@@ -100,6 +103,21 @@ services:
         condition: service_started
       redis:
         condition: service_started
+    networks:
+      - pwc_network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: ./src/python/projects/frontend/Dockerfile
+    container_name: pwc_frontend
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    environment:
+      - API_BASE_URL=http://api:8000
+    depends_on:
+      - api
     networks:
       - pwc_network
 
