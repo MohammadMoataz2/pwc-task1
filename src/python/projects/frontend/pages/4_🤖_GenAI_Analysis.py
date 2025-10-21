@@ -106,108 +106,173 @@ with tab1:
 
 with tab2:
     st.header("Contract Evaluation")
-    st.markdown("Evaluate contract health and get approval recommendations")
+    st.markdown("Evaluate your uploaded contracts for health and approval recommendations")
 
-    # Method selection
-    evaluation_method = st.radio(
-        "Choose evaluation method:",
-        ["Upload PDF for Direct Evaluation", "Evaluate Using Clause Data"]
-    )
+    # Fetch user's contracts
+    try:
+        contracts_response = APIClient.get("/contracts/")
+        contracts_data = handle_api_response(contracts_response)
+        user_contracts = contracts_data if contracts_data else []
 
-    if evaluation_method == "Upload PDF for Direct Evaluation":
-        with st.form("evaluate_contract_pdf"):
-            contract_file = st.file_uploader(
-                "Choose PDF file for evaluation",
-                type=['pdf'],
-                help="Upload a PDF contract for AI evaluation"
+        # Filter contracts that have analysis results
+        analyzed_contracts = [c for c in user_contracts if c.get("analysis_result")]
+
+        if analyzed_contracts:
+            # Contract selection
+            contract_options = {
+                contract["id"]: f"{contract['filename']} (Status: {contract['status']})"
+                for contract in analyzed_contracts
+            }
+
+            selected_contract_id = st.selectbox(
+                "Select a contract to evaluate:",
+                options=list(contract_options.keys()),
+                format_func=lambda x: contract_options[x],
+                help="Only contracts with analysis results can be evaluated"
             )
 
-            evaluate_btn = st.form_submit_button("Evaluate Contract", type="primary", use_container_width=True)
+            if selected_contract_id:
+                selected_contract = next(c for c in analyzed_contracts if c["id"] == selected_contract_id)
 
-        if evaluate_btn and contract_file:
-            with st.spinner("Evaluating contract with AI..."):
-                try:
-                    file_data = contract_file.read()
-                    response = APIClient.upload_file(
+                col1, col2 = st.columns([2, 1])
+
+                with col1:
+                    st.write(f"**Selected Contract:** {selected_contract['filename']}")
+                    st.write(f"**Status:** {selected_contract['status']}")
+
+                    # Show analysis summary
+                    analysis = selected_contract.get("analysis_result", {})
+                    clauses = analysis.get("clauses", [])
+                    st.write(f"**Clauses Found:** {len(clauses)}")
+
+                    if clauses:
+                        clause_types = [c.get("type", "unknown") for c in clauses]
+                        clause_counts = pd.Series(clause_types).value_counts()
+                        st.write("**Clause Types:**")
+                        for clause_type, count in clause_counts.items():
+                            st.write(f"- {clause_type.replace('_', ' ').title()}: {count}")
+
+                with col2:
+                    # Evaluate button
+                    if st.button("🔍 Evaluate Contract", type="primary", use_container_width=True):
+                        with st.spinner("Evaluating contract with AI..."):
+                            try:
+                                # Use the clauses from analysis result for evaluation
+                                response = APIClient.post(
+                                    "/genai/evaluate-contract",
+                                    {"clauses": clauses}
+                                )
+
+                                evaluation_data = handle_api_response(response)
+                                if evaluation_data:
+                                    st.success("Evaluation completed!")
+
+                                    # Display results
+                                    st.subheader("📊 Evaluation Results")
+
+                                    approved = evaluation_data.get("approved", False)
+                                    reasoning = evaluation_data.get("reasoning", "No reasoning provided")
+
+                                    if approved:
+                                        st.success("✅ **Contract Approved**")
+                                    else:
+                                        st.error("❌ **Contract Not Approved**")
+
+                                    st.subheader("📝 Reasoning")
+                                    st.write(reasoning)
+
+                                    # Download results
+                                    if st.button("Download Evaluation Results"):
+                                        st.download_button(
+                                            label="Download Evaluation Results",
+                                            data=json.dumps(evaluation_data, indent=2),
+                                            file_name=f"evaluation_{selected_contract['filename']}.json",
+                                            mime="application/json"
+                                        )
+
+                            except Exception as e:
+                                st.error(f"Evaluation failed: {str(e)}")
+
+                # Show existing evaluation if available
+                if selected_contract.get("evaluation_result"):
+                    st.subheader("📋 Previous Evaluation Results")
+                    evaluation = selected_contract["evaluation_result"]
+
+                    approved = evaluation.get("approved", False)
+                    if approved:
+                        st.success("✅ Previous evaluation: **Approved**")
+                    else:
+                        st.error("❌ Previous evaluation: **Not Approved**")
+
+                    st.write(f"**Reasoning:** {evaluation.get('reasoning', 'N/A')}")
+
+        else:
+            st.info("No analyzed contracts found. Please upload and analyze contracts first.")
+            st.markdown("""
+            **To evaluate a contract:**
+            1. Go to the 'Contracts' tab
+            2. Upload a PDF contract
+            3. Run the analysis pipeline
+            4. Return here to evaluate the analyzed contract
+            """)
+
+    except Exception as e:
+        st.error(f"Failed to fetch contracts: {str(e)}")
+
+    # Method selection for direct upload
+    st.markdown("---")
+    st.subheader("Direct PDF Evaluation")
+    st.markdown("Upload a PDF directly for immediate evaluation (without storing)")
+
+    with st.form("evaluate_contract_pdf"):
+        contract_file = st.file_uploader(
+            "Choose PDF file for direct evaluation",
+            type=['pdf'],
+            help="Upload a PDF contract for immediate AI evaluation"
+        )
+
+        evaluate_btn = st.form_submit_button("Evaluate PDF", type="secondary", use_container_width=True)
+
+    if evaluate_btn and contract_file:
+        with st.spinner("Evaluating contract with AI..."):
+            try:
+                file_data = contract_file.read()
+                response = APIClient.upload_file(
+                    "/genai/analyze-contract",
+                    file_data,
+                    contract_file.name
+                )
+
+                analysis_data = handle_api_response(response)
+                if analysis_data:
+                    # Now evaluate using the analysis results
+                    clauses = analysis_data.get("clauses", [])
+
+                    eval_response = APIClient.post(
                         "/genai/evaluate-contract",
-                        file_data,
-                        contract_file.name
+                        {"clauses": clauses}
                     )
 
-                    evaluation_data = handle_api_response(response)
+                    evaluation_data = handle_api_response(eval_response)
                     if evaluation_data:
-                        st.success("Evaluation completed!")
-
-                        # Display results
-                        st.subheader("📊 Evaluation Results")
+                        st.success("Direct evaluation completed!")
 
                         approved = evaluation_data.get("approved", False)
                         reasoning = evaluation_data.get("reasoning", "No reasoning provided")
-                        score = evaluation_data.get("score", 0)
 
-                        col1, col2 = st.columns(2)
-
-                        with col1:
-                            if approved:
-                                st.success("✅ **Contract Approved**")
-                            else:
-                                st.error("❌ **Contract Not Approved**")
-
-                            st.write(f"**Risk Score:** {score}")
-
-                        with col2:
-                            # Score gauge
-                            import plotly.graph_objects as go
-
-                            fig = go.Figure(go.Indicator(
-                                mode = "gauge+number",
-                                value = score,
-                                domain = {'x': [0, 1], 'y': [0, 1]},
-                                title = {'text': "Risk Score"},
-                                gauge = {
-                                    'axis': {'range': [None, 1]},
-                                    'bar': {'color': "darkblue"},
-                                    'steps': [
-                                        {'range': [0, 0.3], 'color': "lightgreen"},
-                                        {'range': [0.3, 0.7], 'color': "yellow"},
-                                        {'range': [0.7, 1], 'color': "lightcoral"}
-                                    ],
-                                    'threshold': {
-                                        'line': {'color': "red", 'width': 4},
-                                        'thickness': 0.75,
-                                        'value': 0.7
-                                    }
-                                }
-                            ))
-
-                            st.plotly_chart(fig, use_container_width=True)
+                        if approved:
+                            st.success("✅ **Contract Approved**")
+                        else:
+                            st.error("❌ **Contract Not Approved**")
 
                         st.subheader("📝 Reasoning")
                         st.write(reasoning)
 
-                        # Download results
-                        if st.button("Download Evaluation Results"):
-                            st.download_button(
-                                label="Download Evaluation Results",
-                                data=json.dumps(evaluation_data, indent=2),
-                                file_name=f"evaluation_{contract_file.name}.json",
-                                mime="application/json"
-                            )
+            except Exception as e:
+                st.error(f"Direct evaluation failed: {str(e)}")
 
-                except Exception as e:
-                    st.error(f"Evaluation failed: {str(e)}")
-
-        elif evaluate_btn:
-            st.error("Please upload a PDF file for evaluation")
-
-    else:
-        st.info("Manual clause evaluation feature coming soon...")
-        st.markdown("""
-        This feature will allow you to:
-        - Input contract clauses manually
-        - Evaluate based on predefined clause types
-        - Get detailed risk assessments for each clause type
-        """)
+    elif evaluate_btn:
+        st.error("Please upload a PDF file for evaluation")
 
 # Quick analysis tips
 with st.expander("💡 Analysis Tips"):

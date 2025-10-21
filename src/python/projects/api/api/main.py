@@ -17,6 +17,7 @@ from pwc.logger import setup_logger
 from .core.database import init_database, close_database
 from .core.celery_app import celery_app
 from .handlers.v1 import auth, contracts, clients, genai, logs, metrics, health, internal_contracts
+from .middleware import LoggingMiddleware
 
 logger = setup_logger(__name__)
 
@@ -39,6 +40,9 @@ app = FastAPI(
     version=settings.app_version,
     lifespan=lifespan
 )
+
+# Add logging middleware
+app.add_middleware(LoggingMiddleware)
 
 # CORS
 if settings.backend_cors_origins:

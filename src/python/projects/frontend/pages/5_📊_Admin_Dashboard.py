@@ -48,46 +48,152 @@ tab1, tab2, tab3 = st.tabs(["📈 Metrics", "📋 Logs", "🏥 Health"])
 with tab1:
     st.header("System Metrics")
 
+    # Metrics view toggle
+    metrics_view = st.radio(
+        "Select View:",
+        ["User Metrics", "System Metrics (Admin)"],
+        horizontal=True
+    )
+
     try:
-        # Fetch metrics
-        response = APIClient.get("/metrics")
-        metrics_data = handle_api_response(response)
+        if metrics_view == "User Metrics":
+            # Fetch user metrics
+            response = APIClient.get("/metrics/user")
+            metrics_data = handle_api_response(response)
 
-        if metrics_data:
-            # Overview metrics
-            col1, col2, col3, col4 = st.columns(4)
+            if metrics_data:
+                st.subheader("👤 Your Activity Dashboard")
 
-            with col1:
-                total_requests = metrics_data.get("total_requests", 0)
-                st.metric(
-                    label="Total Requests",
-                    value=f"{total_requests:,}",
-                    delta=metrics_data.get("requests_delta", None)
-                )
+                # User overview metrics
+                col1, col2, col3, col4 = st.columns(4)
 
-            with col2:
-                avg_latency = metrics_data.get("average_latency", 0)
-                st.metric(
-                    label="Avg Latency (ms)",
-                    value=f"{avg_latency:.2f}",
-                    delta=metrics_data.get("latency_delta", None)
-                )
+                with col1:
+                    st.metric(
+                        label="My Requests (24h)",
+                        value=f"{metrics_data.get('user_request_count', 0):,}"
+                    )
 
-            with col3:
-                success_rate = metrics_data.get("success_rate", 0)
-                st.metric(
-                    label="Success Rate",
-                    value=f"{success_rate:.1f}%",
-                    delta=metrics_data.get("success_delta", None)
-                )
+                with col2:
+                    st.metric(
+                        label="My Avg Latency (ms)",
+                        value=f"{metrics_data.get('user_avg_latency', 0):.2f}"
+                    )
 
-            with col4:
-                active_contracts = metrics_data.get("active_contracts", 0)
-                st.metric(
-                    label="Active Contracts",
-                    value=f"{active_contracts:,}",
-                    delta=metrics_data.get("contracts_delta", None)
-                )
+                with col3:
+                    st.metric(
+                        label="My Contracts",
+                        value=f"{metrics_data.get('user_contract_count', 0):,}"
+                    )
+
+                with col4:
+                    st.metric(
+                        label="My Clients",
+                        value=f"{metrics_data.get('user_client_count', 0):,}"
+                    )
+
+                # User contract status
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    processed = metrics_data.get('user_processed_contracts', 0)
+                    failed = metrics_data.get('user_failed_contracts', 0)
+                    total = metrics_data.get('user_contract_count', 0)
+
+                    contract_status = {
+                        'Processed': processed,
+                        'Failed': failed,
+                        'Other': max(0, total - processed - failed)
+                    }
+
+                    if total > 0:
+                        fig_status = px.pie(
+                            values=list(contract_status.values()),
+                            names=list(contract_status.keys()),
+                            title="My Contract Status Distribution"
+                        )
+                        st.plotly_chart(fig_status, use_container_width=True)
+
+                with col2:
+                    # Top endpoints for user
+                    top_endpoints = metrics_data.get('top_endpoints', [])
+                    if top_endpoints:
+                        st.subheader("My Top Endpoints")
+                        for i, endpoint in enumerate(top_endpoints[:5], 1):
+                            st.write(f"{i}. **{endpoint['endpoint']}**: {endpoint['count']} requests")
+
+        else:
+            # Fetch system metrics
+            response = APIClient.get("/metrics/system")
+            metrics_data = handle_api_response(response)
+
+            if metrics_data:
+                st.subheader("🌐 System-Wide Dashboard")
+
+                # System overview metrics
+                col1, col2, col3, col4 = st.columns(4)
+
+                with col1:
+                    st.metric(
+                        label="Total Requests (24h)",
+                        value=f"{metrics_data.get('total_request_count', 0):,}"
+                    )
+
+                with col2:
+                    st.metric(
+                        label="System Avg Latency (ms)",
+                        value=f"{metrics_data.get('system_avg_latency', 0):.2f}"
+                    )
+
+                with col3:
+                    error_rate = metrics_data.get('error_rate', 0)
+                    st.metric(
+                        label="Error Rate",
+                        value=f"{error_rate:.1f}%",
+                        delta=None if error_rate < 5 else "⚠️ High"
+                    )
+
+                with col4:
+                    st.metric(
+                        label="Total Contracts",
+                        value=f"{metrics_data.get('total_contract_count', 0):,}"
+                    )
+
+                # System contract status
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    processed = metrics_data.get('total_processed_contracts', 0)
+                    failed = metrics_data.get('total_failed_contracts', 0)
+                    total = metrics_data.get('total_contract_count', 0)
+
+                    contract_status = {
+                        'Processed': processed,
+                        'Failed': failed,
+                        'Other': max(0, total - processed - failed)
+                    }
+
+                    if total > 0:
+                        fig_status = px.pie(
+                            values=list(contract_status.values()),
+                            names=list(contract_status.keys()),
+                            title="System Contract Status Distribution"
+                        )
+                        st.plotly_chart(fig_status, use_container_width=True)
+
+                with col2:
+                    # Top users
+                    top_users = metrics_data.get('top_users', [])
+                    if top_users:
+                        st.subheader("Most Active Users")
+                        for i, user_data in enumerate(top_users[:5], 1):
+                            st.write(f"{i}. **{user_data['user']}**: {user_data['request_count']} requests")
+
+                # Endpoint statistics
+                endpoint_stats = metrics_data.get('endpoint_stats', [])
+                if endpoint_stats:
+                    st.subheader("Endpoint Performance")
+                    df_endpoints = pd.DataFrame(endpoint_stats)
+                    st.dataframe(df_endpoints, use_container_width=True)
 
             st.markdown("---")
 
@@ -200,49 +306,75 @@ with tab2:
         response = APIClient.get("/logs", params=params)
         logs_data = handle_api_response(response)
 
-        if logs_data and logs_data.get("items"):
-            logs = logs_data["items"]
+        if logs_data:
+            logs = logs_data if isinstance(logs_data, list) else logs_data.get("items", [])
 
             # Display logs
             st.subheader(f"Recent Logs ({len(logs)} entries)")
 
-            for log in logs:
-                timestamp = log.get("timestamp", "Unknown")
-                method = log.get("method", "GET")
-                endpoint = log.get("endpoint", "Unknown")
-                status_code = log.get("status_code", 200)
-                user = log.get("user", "Anonymous")
-                latency = log.get("latency", 0)
+            if logs:
+                for log in logs:
+                    timestamp = log.get("timestamp", "Unknown")
+                    if timestamp != "Unknown":
+                        # Format timestamp for display
+                        try:
+                            from datetime import datetime
+                            dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                            timestamp = dt.strftime("%Y-%m-%d %H:%M:%S")
+                        except:
+                            pass
 
-                # Color code by status
-                if status_code >= 500:
-                    status_color = "🔴"
-                elif status_code >= 400:
-                    status_color = "🟡"
-                else:
-                    status_color = "🟢"
+                    method = log.get("method", "GET")
+                    endpoint = log.get("endpoint", "Unknown")
+                    status_code = log.get("status_code", 200)
+                    user = log.get("user", "Anonymous")
+                    latency = log.get("response_time_ms", 0)
+                    ip_address = log.get("ip_address", "Unknown")
 
-                with st.expander(f"{status_color} {timestamp} - {method} {endpoint} ({status_code})"):
-                    col1, col2 = st.columns(2)
+                    # Color code by status
+                    if status_code >= 500:
+                        status_color = "🔴"
+                    elif status_code >= 400:
+                        status_color = "🟡"
+                    else:
+                        status_color = "🟢"
 
-                    with col1:
-                        st.write(f"**User:** {user}")
-                        st.write(f"**Method:** {method}")
-                        st.write(f"**Endpoint:** {endpoint}")
+                    with st.expander(f"{status_color} {timestamp} - {method} {endpoint} ({status_code})"):
+                        col1, col2 = st.columns(2)
 
-                    with col2:
-                        st.write(f"**Status:** {status_code}")
-                        st.write(f"**Latency:** {latency:.2f}ms")
-                        st.write(f"**Timestamp:** {timestamp}")
+                        with col1:
+                            st.write(f"**User:** {user}")
+                            st.write(f"**Method:** {method}")
+                            st.write(f"**Endpoint:** {endpoint}")
+                            st.write(f"**IP Address:** {ip_address}")
 
-                    # Additional details
-                    if log.get("details"):
-                        st.write("**Details:**")
-                        st.json(log["details"])
+                        with col2:
+                            st.write(f"**Status Code:** {status_code}")
+                            st.write(f"**Response Time:** {latency:.2f}ms")
+                            st.write(f"**Timestamp:** {timestamp}")
 
-            # Pagination info
-            total = logs_data.get("total", len(logs))
-            st.info(f"Showing {len(logs)} of {total} log entries")
+                            # Show error message if present
+                            if log.get("error_message"):
+                                st.write(f"**Error:** {log['error_message']}")
+
+                # Logs summary
+                st.markdown("---")
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    success_logs = [log for log in logs if log.get("status_code", 200) < 400]
+                    st.metric("Success Requests", len(success_logs))
+
+                with col2:
+                    error_logs = [log for log in logs if log.get("status_code", 200) >= 400]
+                    st.metric("Error Requests", len(error_logs))
+
+                with col3:
+                    if logs:
+                        avg_latency = sum(log.get("response_time_ms", 0) for log in logs) / len(logs)
+                        st.metric("Avg Response Time", f"{avg_latency:.2f}ms")
+            else:
+                st.info("No logs found for the current filters.")
 
         else:
             st.info("No logs found matching the criteria")

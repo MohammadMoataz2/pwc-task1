@@ -113,7 +113,7 @@ async def list_contracts(
     current_user: str = Depends(get_current_user)
 ):
     """List contracts with optional filtering"""
-    query = {}
+    query = {"uploaded_by": current_user}  # Only show user's own contracts
     if status:
         query["status"] = status
 
@@ -146,6 +146,13 @@ async def get_contract(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Contract not found"
+        )
+
+    # Ensure user can only access their own contracts
+    if contract.uploaded_by != current_user:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied to this contract"
         )
 
     return ContractResponse(
