@@ -19,10 +19,18 @@ def get_current_user() -> Optional[Dict[str, Any]]:
 def login(username: str, password: str) -> bool:
     """Login user and store token"""
     try:
-        response = APIClient.post("/auth/login", {
+        # OAuth2PasswordRequestForm expects form data, not JSON
+        import requests
+        from config import get_api_url
+
+        url = get_api_url("/auth/login")
+        form_data = {
             "username": username,
-            "password": password
-        })
+            "password": password,
+            "grant_type": "password"
+        }
+
+        response = requests.post(url, data=form_data)
 
         if response.status_code == 200:
             data = response.json()
