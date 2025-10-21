@@ -20,7 +20,7 @@ class EvaluateContractExecutor(ContractTaskExecutor):
         try:
             # Get contract details and analysis result from API
             contract = await self.api.get_contract(self.task_info.contract_id)
-
+            print("Here are The Contract", contract)
             # Check if analysis result exists
             if not contract.get("analysis_result"):
                 raise ValueError("Contract analysis must be completed before evaluation")

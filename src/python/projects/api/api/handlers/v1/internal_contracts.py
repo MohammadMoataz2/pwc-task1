@@ -40,14 +40,7 @@ async def get_contract_internal(
 ):
     """Get contract details for internal worker access"""
     contract = await _get_contract(contract_id)
-    return {
-        "id": str(contract.id),
-        "title": contract.title,
-        "file_path": contract.file_path,
-        "state": contract.status,
-        "created_at": contract.created_at,
-        "updated_at": contract.updated_at
-    }
+    return contract
 
 
 @router.get("/{contract_id}/internal/pipeline/{run_id}/is-latest")
@@ -149,7 +142,7 @@ async def report_contract_failure(
     # Update contract with failure information
     contract.status = ContractState.failed.value
     contract.error_message = failure_data.error_message
-    contract.error_type = failure_data.error_type
+    # contract.error_type = failure_data.error_type
     contract.updated_at = datetime.now(timezone.utc)
 
     await contract.save()
