@@ -8,7 +8,7 @@ from .base import AIInterface, ContractClause, ContractAnalysisResult, ContractE
 class OpenAIClient(AIInterface):
     """OpenAI implementation for contract analysis"""
 
-    def __init__(self, api_key: str, model: str = "gpt-4"):
+    def __init__(self, api_key: str, model: str = "gpt-4o"):
         self.client = AsyncOpenAI(api_key=api_key)
         self.model = model
 
@@ -51,7 +51,20 @@ class OpenAIClient(AIInterface):
         )
 
         try:
-            result_data = json.loads(response.choices[0].message.content)
+            content = response.choices[0].message.content
+                        # Extract JSON from markdown code blocks if present
+            if "```json" in content:
+                start = content.find("```json") + 7
+                end = content.find("```", start)
+                content = content[start:end].strip()
+            elif "```" in content:
+                start = content.find("```") + 3
+                end = content.find("```", start)
+                content = content[start:end].strip()
+
+            result_data = json.loads(content)
+
+
             clauses = [ContractClause(**clause) for clause in result_data["clauses"]]
             return ContractAnalysisResult(
                 clauses=clauses,
@@ -99,7 +112,20 @@ class OpenAIClient(AIInterface):
         )
 
         try:
-            result_data = json.loads(response.choices[0].message.content)
+            print("response: of the model", response)
+            content = response.choices[0].message.content
+
+            # Extract JSON from markdown code blocks if present
+            if "```json" in content:
+                start = content.find("```json") + 7
+                end = content.find("```", start)
+                content = content[start:end].strip()
+            elif "```" in content:
+                start = content.find("```") + 3
+                end = content.find("```", start)
+                content = content[start:end].strip()
+
+            result_data = json.loads(content)
             return ContractEvaluationResult(
                 approved=result_data["approved"],
                 reasoning=result_data["reasoning"],

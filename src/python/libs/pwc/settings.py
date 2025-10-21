@@ -32,7 +32,12 @@ class Settings(BaseSettings):
     # AI Factory
     ai_provider: str = Field(default="openai")  # openai, huggingface (future)
     openai_api_key: Optional[str] = Field(default=None)
-    openai_model: str = Field(default="gpt-4")
+    openai_model: str = Field(default="gpt-4o")
+
+    # Per-task AI providers
+    parsing_provider: str = Field(default="openai")
+    analysis_provider: str = Field(default="openai")
+    evaluation_provider: str = Field(default="openai")
 
     # CORS
     backend_cors_origins: List[str] = Field(default_factory=list)

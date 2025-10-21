@@ -87,3 +87,39 @@ class MetricEntry(Document):
 
     class Settings:
         name = "metrics"
+
+
+class PromptTemplate(Document):
+    """MongoDB collection for system and user prompt templates"""
+
+    name: str = Field(..., description="Template name/identifier")
+    type: str = Field(..., description="Template type: system, user, or combined")
+    category: str = Field(..., description="Category: parsing, analysis, evaluation")
+    system_prompt: Optional[str] = Field(None, description="System prompt template")
+    user_prompt: Optional[str] = Field(None, description="User prompt template")
+    tags: List[str] = Field(default_factory=list, description="Tags for categorization")
+    variables: List[str] = Field(default_factory=list, description="Template variable placeholders")
+    active: bool = Field(default=True, description="Whether template is active")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    class Settings:
+        name = "prompt_templates"
+        indexes = [
+            "name",
+            "category",
+            "tags",
+            "active"
+        ]
+
+    def render(self, **variables) -> Dict[str, str]:
+        """Render template with variables"""
+        result = {}
+
+        if self.system_prompt:
+            result["system"] = self.system_prompt.format(**variables)
+
+        if self.user_prompt:
+            result["user"] = self.user_prompt.format(**variables)
+
+        return result

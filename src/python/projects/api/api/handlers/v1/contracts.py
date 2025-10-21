@@ -286,8 +286,10 @@ async def trigger_genai_analysis(
 
     # Create and execute the analysis pipeline using immutable signatures
     # This prevents tasks from receiving previous task results as arguments
+    # NEW: Added separate parse step for strategy pattern
     pipeline = chain(
         celery_app.signature("contract_analysis.change_state", args=[ContractState.processing.value, task_info_dict], immutable=True),
+        celery_app.signature("contract_analysis.parse_document", args=[task_info_dict], immutable=True),
         celery_app.signature("contract_analysis.analyze_clauses", args=[task_info_dict], immutable=True),
         celery_app.signature("contract_analysis.evaluate_health", args=[task_info_dict], immutable=True),
         celery_app.signature("contract_analysis.change_state", args=[ContractState.completed.value, task_info_dict], immutable=True)

@@ -15,6 +15,7 @@ from pwc.task_interface.base import TaskInfo
 # Import task registry and executors
 from .task_registry import task_registry
 from .executors import (
+    ParseContractExecutor,
     AnalyzeContractExecutor,
     EvaluateContractExecutor,
     ChangeStateExecutor,
@@ -51,6 +52,11 @@ celery_app.conf.update(
 def register_tasks():
     """Register task executors following the reference project pattern"""
     task_registry.register_task(
+        "contract_analysis.parse_document",
+        ParseContractExecutor,
+        logger_factory=lambda: setup_logger()
+    )
+    task_registry.register_task(
         "contract_analysis.analyze_clauses",
         AnalyzeContractExecutor,
         logger_factory=lambda: setup_logger()
@@ -75,6 +81,23 @@ def register_tasks():
 
 
 # Register shared task implementations
+@celery_app.task(name="contract_analysis.parse_document", bind=True)
+def parse_contract_document(self, task_info_dict):
+    """Shared task: Parse contract document"""
+    task_info = TaskInfo(**task_info_dict)
+    executor = task_registry.get_executor("contract_analysis.parse_document", task_info)
+
+    # Run the executor asynchronously
+    import asyncio
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        result = loop.run_until_complete(executor.run(task_info_dict))
+        return result
+    finally:
+        loop.close()
+
+
 @celery_app.task(name="contract_analysis.analyze_clauses", bind=True)
 def analyze_contract_clauses(self, task_info_dict):
     """Shared task: Analyze contract clauses"""

@@ -6,6 +6,6 @@ beanie>=1.24.0
 pydantic>=2.0.0
 pydantic-settings>=2.0.0
 openai>=1.0.0
-PyPDF2>=3.0.0
+PyPDF2
 aiofiles>=23.0.0
 motor>=3.3.0

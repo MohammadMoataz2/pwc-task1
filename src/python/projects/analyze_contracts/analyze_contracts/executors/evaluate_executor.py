@@ -1,69 +1,64 @@
-import time
-import asyncio
 from typing import Dict, Any
 
 from pwc.task_interface.base import ContractTaskExecutor
 from pwc.task_interface.schema import ContractEvaluationResult
-from pwc.ai import AIFactory
+from pwc.factories import EvaluateFactory
+from pwc.ai.base import ContractClause
 from pwc.settings import settings
 
 
 class EvaluateContractExecutor(ContractTaskExecutor):
-    """Executor for contract health evaluation"""
+    """Executor for contract health evaluation using AI-based factory"""
 
     async def run(self, task_info_dict: Dict[str, Any]) -> ContractEvaluationResult:
-        """Evaluate contract health and approval status"""
-        start_time = time.time()
-
-        self.logger.info(f"Starting contract evaluation for {self.task_info.contract_id}")
+        """Evaluate contract health using AI factory"""
+        self.logger.info(f"[EXECUTOR] Starting contract evaluation for {self.task_info.contract_id}")
 
         try:
-            # Get contract details and analysis result from API
+            # Get contract with analysis results from API
+            self.logger.info(f"[EXECUTOR] Fetching contract with analysis results from API")
             contract = await self.api.get_contract(self.task_info.contract_id)
-            print("Here are The Contract", contract)
-            # Check if analysis result exists
-            if not contract.get("analysis_result"):
-                raise ValueError("Contract analysis must be completed before evaluation")
+            self.logger.info(f"[EXECUTOR] Contract loaded with analysis results")
 
-            analysis_result = contract["analysis_result"]
+            # Extract clauses from analysis results
+            if not contract.get("analysis_result") or not contract["analysis_result"].get("clauses"):
+                self.logger.error(f"[EXECUTOR] No analysis results found for contract {self.task_info.contract_id}")
+                raise ValueError("No analysis results found. Contract must be analyzed first.")
 
-            # Initialize AI client (using existing GenAI factory)
-            ai_client = AIFactory.create_client(
-                settings.ai_provider,
-                api_key=settings.openai_api_key,
-                model=settings.openai_model
+            self.logger.info(f"[EXECUTOR] Found {len(contract['analysis_result']['clauses'])} clauses to evaluate")
+
+            # Convert to AI client format (ContractClause objects)
+            clauses = [
+                ContractClause(
+                    type=clause.get("type", "unknown"),
+                    content=clause.get("content", ""),
+                    confidence=clause.get("confidence", 0.8)
+                )
+                for clause in contract["analysis_result"]["clauses"]
+            ]
+
+            # Evaluate contract using factory
+            evaluation_result = await EvaluateFactory.evaluate(
+                clauses,
+                logger=self.logger
             )
 
-            # Convert analysis result clauses to the format expected by evaluate_contract
-            from pwc.ai.base import ContractClause
-            clause_objects = []
-            for clause_data in analysis_result.get("clauses", []):
-                clause_obj = ContractClause(
-                    type=clause_data.get("type", "other"),
-                    content=clause_data.get("content", ""),
-                    confidence=clause_data.get("confidence", 0.5)
-                )
-                clause_objects.append(clause_obj)
-
-            # Use the existing evaluate_contract method from GenAI client
-            evaluation_result = await ai_client.evaluate_contract(clause_objects)
-
-            # Convert to our format
-            evaluation = ContractEvaluationResult(
+            # Create final result
+            result = ContractEvaluationResult(
                 approved=evaluation_result.approved,
+                risk_score=getattr(evaluation_result, 'score', 0.0),
                 reasoning=evaluation_result.reasoning,
-                risk_score=getattr(evaluation_result, 'risk_score', 0.5),
                 recommendations=getattr(evaluation_result, 'recommendations', []),
                 critical_issues=getattr(evaluation_result, 'critical_issues', []),
-                processing_time=time.time() - start_time
+                processing_time=0  # TODO: Add timing
             )
 
             # Save result via API
-            await self.api.save_evaluation_result(self.task_info.contract_id, evaluation)
+            await self.api.save_evaluation_result(self.task_info.contract_id, result)
 
-            processing_time = time.time() - start_time
-            self.logger.info(f"Contract evaluation completed in {processing_time:.2f}s")
-            return evaluation
+            self.logger.info(f"[EXECUTOR] Contract evaluation completed for {self.task_info.contract_id}")
+            self.logger.info(f"[EXECUTOR] Result: approved={result.approved}, risk_score={result.risk_score}")
+            return result
 
         except Exception as e:
             self.logger.error(f"Contract evaluation failed: {e}")

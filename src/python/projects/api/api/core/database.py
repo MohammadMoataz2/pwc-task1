@@ -2,7 +2,7 @@ import motor.motor_asyncio
 from beanie import init_beanie
 from pwc.settings import settings
 from pwc.logger import setup_logger
-from ..db.models import Contract, Client, User, LogEntry, MetricEntry
+from ..db.models import Contract, Client, User, LogEntry, MetricEntry, PromptTemplate
 
 logger = setup_logger(__name__)
 
@@ -22,7 +22,8 @@ async def init_database():
                 Client,
                 User,
                 LogEntry,
-                MetricEntry
+                MetricEntry,
+                PromptTemplate
             ]
         )
 

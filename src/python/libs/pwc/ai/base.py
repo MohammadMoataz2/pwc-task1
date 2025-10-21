@@ -3,6 +3,12 @@ from typing import Dict, Any, List
 from pydantic import BaseModel
 
 
+class ParsedDocument(BaseModel):
+    text: str
+    page_count: int = 0
+    metadata: Dict[str, Any] = {}
+
+
 class ContractClause(BaseModel):
     type: str
     content: str
