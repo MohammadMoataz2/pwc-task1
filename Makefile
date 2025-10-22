@@ -59,7 +59,9 @@ up: check-env ## Start all services
 	@echo "${GREEN}Services started successfully!${NC}"
 	@echo "${BLUE}API available at: http://localhost:8000${NC}"
 	@echo "${BLUE}API docs available at: http://localhost:8000/docs${NC}"
+	@echo "${BLUE}Frontend available at: http://localhost:8501${NC}"
 	@echo "${BLUE}MongoDB Admin (Mongo Express) available at: http://localhost:8081${NC}"
+	@echo "${BLUE}Flower (Celery Monitor) available at: http://localhost:5555${NC}"
 	@echo "${YELLOW}MongoDB Admin credentials: admin / admin123${NC}"
 
 down: ## Stop all services

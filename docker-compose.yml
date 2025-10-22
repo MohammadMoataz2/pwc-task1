@@ -27,6 +27,20 @@ services:
     networks:
       - pwc_network
 
+  # RedisInsight - Redis GUI
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: pwc_redisinsight
+    restart: unless-stopped
+    ports:
+      - "5540:5540"
+    volumes:
+      - redisinsight_data:/data
+    depends_on:
+      - redis
+    networks:
+      - pwc_network
+
   mongo-express:
     image: mongo-express:1.0-20-alpine3.18
     container_name: pwc_mongo_express
@@ -70,11 +84,6 @@ services:
       - redis
     networks:
       - pwc_network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   worker:
     build:
@@ -97,13 +106,6 @@ services:
       - EVALUATION_PROVIDER=${EVALUATION_PROVIDER:-openai}
     volumes:
       - api_storage:/app/storage
-    depends_on:
-      api:
-        condition: service_healthy
-      mongodb:
-        condition: service_started
-      redis:
-        condition: service_started
     networks:
       - pwc_network
 
@@ -122,9 +124,26 @@ services:
     networks:
       - pwc_network
 
+  flower:
+    image: mher/flower:master
+    container_name: pwc_flower
+    restart: unless-stopped
+    ports:
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-redis://redis:6379/0}
+      - FLOWER_PORT=5555
+    depends_on:
+      - redis
+      - worker
+    networks:
+      - pwc_network
+    command: celery flower --broker=${CELERY_BROKER_URL:-redis://redis:6379/0}
+
 volumes:
   mongodb_data:
   redis_data:
+  redisinsight_data:  # Add this volume
   api_storage:
 
 networks:
