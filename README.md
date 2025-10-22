@@ -15,7 +15,7 @@ A **production-ready contract analysis system** that demonstrates:
 - **📦 Monorepo Structure** with shared libraries and multiple services
 - **🏭 Factory Design Patterns** for AI providers and storage abstraction
 - **📚 Shared Library Architecture** for reusable components
-- **⚡ Async Processing** with Celery workers and Redis
+- **⚡ Async Processing** with Celery workers (parse, analyze, evaluate tasks) and Redis
 - **🤖 GenAI Integration** with OpenAI Client for contract analysis
 - **🔒 JWT Authentication** with secure user management
 - **📊 Monitoring** through Redis Insight, Flower, and Mongo Express
@@ -123,7 +123,8 @@ A **production-ready contract analysis system** that demonstrates:
 - **Persistent storage** with appendonly mode
 
 **⚡ Worker Container (`pwc_worker`):**
-- **Celery Workers** with executor pattern
+- **Celery Workers** with executor pattern and task registry
+- **Core Tasks**: `parse_document`, `analyze_clauses`, `evaluate_health`, `change_state`, `report_failure`
 - **Task isolation** - no direct DB access
 - **Fault tolerance** with retry mechanisms
 - **Horizontal scaling** capability
@@ -348,6 +349,47 @@ PWC/task2/
 ✅ **Container Orchestration** - Docker Compose with health checks
 ✅ **Real-time Monitoring** - Flower, Redis Insight, Mongo Express
 ✅ **Security Best Practices** - JWT auth, input validation, secure storage
+
+---
+
+## 🚀 **Future Improvements**
+
+### **🔄 Caching Strategy**
+- **Redis caching** for frequently accessed contract data
+- **API response caching** with TTL policies
+- **AI analysis result caching** to avoid duplicate processing
+- **Session caching** optimization for faster authentication
+
+### **🤖 Enhanced AI Processing**
+- **Multiple parsing strategies** - PyPDF2, pdfplumber, OCR fallback
+- **AI provider load balancing** - distribute requests across multiple models
+- **Custom analysis pipelines** - domain-specific contract types
+- **Confidence scoring** improvements with ensemble methods
+- **Streaming analysis** for large documents
+
+### **📊 Advanced Analytics**
+- **Contract comparison** and diff analysis
+- **Trend analysis** across contract portfolios
+- **Risk scoring** with machine learning models
+- **Automated compliance** checking against regulations
+
+### **🏗️ Infrastructure Enhancements**
+- **Kubernetes deployment** with Helm charts
+- **Auto-scaling** based on queue depth and CPU usage
+- **Multi-region deployment** for global availability
+- **Message queue partitioning** for better performance
+
+### **🔒 Security Improvements**
+- **API rate limiting** with Redis-based throttling
+- **OAuth2 integration** for enterprise SSO
+- **Audit logging** for compliance requirements
+- **Encryption at rest** for sensitive contract data
+
+### **📈 Monitoring & Observability**
+- **Prometheus/Grafana** integration for metrics
+- **Distributed tracing** with Jaeger
+- **Alerting system** for system health monitoring
+- **Performance profiling** and optimization
 
 ---
 
