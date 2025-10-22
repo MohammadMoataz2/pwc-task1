@@ -40,6 +40,36 @@ with tab1:
     except:
         user_clients = []
 
+    # Force client creation if none exist
+    if not user_clients:
+        st.warning("⚠️ **No clients found!** You must create a client before uploading contracts.")
+
+        with st.expander("➕ Create Your First Client", expanded=True):
+            with st.form("create_first_client"):
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    client_name = st.text_input("Client Name*", placeholder="Enter client name")
+                    client_company = st.text_input("Company (optional)", placeholder="Company name")
+
+                with col2:
+                    client_email = st.text_input("Email (optional)", placeholder="client@example.com")
+
+                if st.form_submit_button("Create Client", type="primary", use_container_width=True):
+                    if client_name:
+                        response = APIClient.post("/clients/", {
+                            "name": client_name,
+                            "company": client_company,
+                            "email": client_email
+                        })
+                        if handle_api_response(response):
+                            st.success("Client created successfully! You can now upload contracts.")
+                            st.rerun()
+                    else:
+                        st.error("Please provide a client name")
+
+        st.stop()  # Stop rendering the upload form if no clients exist
+
     with st.form("upload_contract"):
         col1, col2 = st.columns(2)
 
@@ -91,9 +121,14 @@ with tab1:
                 height=100
             )
 
-        upload_btn = st.form_submit_button("Upload Contract", type="primary", use_container_width=True)
+        # Two upload options
+        col_btn1, col_btn2 = st.columns(2)
+        with col_btn1:
+            upload_only_btn = st.form_submit_button("📤 Upload Only", use_container_width=True)
+        with col_btn2:
+            upload_analyze_btn = st.form_submit_button("🤖 Upload + Analyze", type="primary", use_container_width=True)
 
-    if upload_btn:
+    if upload_only_btn or upload_analyze_btn:
         if not contract_file:
             st.error("Please provide a PDF file")
         elif selected_client == "new" and not new_client_name:
@@ -135,12 +170,15 @@ with tab1:
                             st.success(f"Contract uploaded successfully!")
                             st.info(f"Contract ID: {contract_data['id']}")
 
-                            # Automatically start analysis
-                            with st.spinner("Starting AI analysis..."):
-                                analysis_response = APIClient.post(f"/contracts/{contract_data['id']}/init-genai")
-                                if handle_api_response(analysis_response):
-                                    st.success("🤖 AI analysis pipeline started! Check the 'My Contracts' tab for results.")
-                                    st.balloons()
+                            # Only start analysis if "Upload + Analyze" was clicked
+                            if upload_analyze_btn:
+                                with st.spinner("Starting AI analysis..."):
+                                    analysis_response = APIClient.post(f"/contracts/{contract_data['id']}/init-genai")
+                                    if handle_api_response(analysis_response):
+                                        st.success("🤖 AI analysis pipeline started! Check the 'My Contracts' tab for results.")
+                                        st.balloons()
+                            else:
+                                st.info("📁 Contract uploaded successfully. You can analyze it later from the 'My Contracts' tab or 'GenAI Analysis' section.")
 
                 except Exception as e:
                     st.error(f"Upload failed: {str(e)}")
@@ -172,11 +210,17 @@ with tab2:
                 if contract.get("client_id"):
                     client_name = clients_lookup.get(contract["client_id"], "Unknown Client")
 
+                # Check if document has analysis and evaluation results
+                has_analysis = bool(contract.get("analysis_result"))
+                has_evaluation = bool(contract.get("evaluation_result"))
+
                 df_data.append({
                     "ID": contract["id"][:8] + "...",  # Shortened ID for display
                     "Filename": contract["filename"],
                     "Client": client_name,
                     "Status": contract["status"],
+                    "Analyzed": "✅" if has_analysis else "❌",
+                    "Evaluated": "✅" if has_evaluation else "❌",
                     "Uploaded": contract["created_at"][:10] if contract.get("created_at") else "Unknown",
                     "Size": f"{contract.get('file_size', 0) / 1024:.1f} KB"
                 })
