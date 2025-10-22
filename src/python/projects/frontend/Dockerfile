@@ -5,29 +5,26 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# Install system dependencies as root
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user from the beginning
-RUN groupadd -r appuser && useradd -r -g appuser -m appuser
-
-# Switch to non-root user immediately
-USER appuser
 
 # Set work directory
 WORKDIR /app
 
 # Set PATH for user's local bin
 ENV PATH=/home/appuser/.local/bin:$PATH
+# Set PATH for user's local bin and PYTHONPATH for shared library
+ENV PATH=/home/appuser/.local/bin:$PATH
+ENV PYTHONPATH=/app/libs:$PYTHONPATH
 
 # Copy requirements and install as non-root user
-COPY --chown=appuser:appuser src/python/projects/frontend/requirements.txt .
-RUN pip install --user -r requirements.txt
+COPY  src/python/projects/frontend/requirements.txt .
+COPY src/python/libs/pwc/requirements.txt ./pwc_requirements.txt
 
+RUN pip install  -r requirements.txt && \
+    pip install  -r pwc_requirements.txt
 # Copy application code
-COPY --chown=appuser:appuser src/python/projects/frontend/ /app/
+COPY  src/python/projects/frontend/ /app/
+COPY src/python/libs/pwc /app/libs/pwc
 
 # Expose Streamlit port
 EXPOSE 8501

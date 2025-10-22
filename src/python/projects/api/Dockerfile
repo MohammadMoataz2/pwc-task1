@@ -5,17 +5,9 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# Install system dependencies as root
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user from the beginning
-RUN groupadd -r appuser && useradd -r -g appuser -m appuser
 
-# Switch to non-root user immediately
-USER appuser
+
 
 # Set work directory            
 WORKDIR /app
@@ -25,21 +17,21 @@ ENV PATH=/home/appuser/.local/bin:$PATH
 ENV PYTHONPATH=/app/libs:$PYTHONPATH
 
 # Copy requirements files
-COPY --chown=appuser:appuser src/python/projects/api/requirements.txt ./api_requirements.txt
-COPY --chown=appuser:appuser src/python/libs/pwc/requirements.txt ./pwc_requirements.txt
+COPY src/python/projects/api/requirements.txt ./api_requirements.txt
+COPY src/python/libs/pwc/requirements.txt ./pwc_requirements.txt
 
 # Install both API and PWC library requirements
-RUN pip install --user -r api_requirements.txt && \
-    pip install --user -r pwc_requirements.txt
+RUN pip install  -r api_requirements.txt && \
+    pip install  -r pwc_requirements.txt
 
 # Copy shared library
-COPY --chown=appuser:appuser src/python/libs/pwc /app/libs/pwc
+COPY  src/python/libs/pwc /app/libs/pwc
 
 # Copy application code
-COPY --chown=appuser:appuser src/python/projects/api/api /app/api
+COPY  src/python/projects/api/api /app/api
 
 # Create storage directory (as non-root user)
-RUN mkdir -p /app/storage
+RUN mkdir  /app/storage
 
 # Expose port
 EXPOSE 8000
