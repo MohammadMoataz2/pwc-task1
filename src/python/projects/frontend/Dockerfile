@@ -26,6 +26,9 @@ RUN pip install  -r requirements.txt && \
 COPY  src/python/projects/frontend/ /app/
 COPY src/python/libs/pwc /app/libs/pwc
 
+
+# Create storage directory (as non-root user)
+RUN mkdir  /app/storage
 # Expose Streamlit port
 EXPOSE 8501
 
