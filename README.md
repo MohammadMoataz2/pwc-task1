@@ -23,6 +23,51 @@ A **production-ready contract analysis system** that demonstrates:
 
 ---
 
+## 🚀 **Quick Start**
+
+### **Prerequisites**
+- Docker & Docker Compose
+- OpenAI API key
+
+### **1. Clone & Setup**
+```bash
+git clone <repository>
+cd PWC/task2
+
+# With Make (if available)
+make setup
+
+# Or with Docker Compose directly
+docker-compose build
+```
+
+### **2. Configure Environment**
+```bash
+# Copy and edit environment file
+cp .env.example .env
+nano .env
+Add: OPENAI_API_KEY=your-actual-api-key
+```
+
+### **3. Start the System**
+```bash
+# With Make (if available)
+make up
+
+# Or with Docker Compose directly
+docker-compose up -d
+```
+
+### **4. Access Services**
+- **API**: http://localhost:8000
+- **API Docs**: http://localhost:8000/docs
+- **Frontend**: http://localhost:8501
+- **Flower (Celery Monitor)**: http://localhost:5555
+- **Redis Insight**: http://localhost:5540
+- **MongoDB Admin**: http://localhost:8081 (admin/admin123)
+
+---
+
 ## 📋 **Core Features**
 
 ### 🔐 **Authentication System**
@@ -154,51 +199,6 @@ A **production-ready contract analysis system** that demonstrates:
 **Frontend**: Streamlit
 **Monitoring**: Flower, Redis Insight, Mongo Express
 **Testing**: pytest, Locust
-
----
-
-## 🚀 **Quick Start**
-
-### **Prerequisites**
-- Docker & Docker Compose
-- OpenAI API key
-
-### **1. Clone & Setup**
-```bash
-git clone <repository>
-cd PWC/task2
-
-# With Make (if available)
-make setup
-
-# Or with Docker Compose directly
-docker-compose build
-```
-
-### **2. Configure Environment**
-```bash
-# Copy and edit environment file
-cp .env.example .env
-nano .env
-Add: OPENAI_API_KEY=your-actual-api-key
-```
-
-### **3. Start the System**
-```bash
-# With Make (if available)
-make up
-
-# Or with Docker Compose directly
-docker-compose up -d
-```
-
-### **4. Access Services**
-- **API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
-- **Frontend**: http://localhost:8501
-- **Flower (Celery Monitor)**: http://localhost:5555
-- **Redis Insight**: http://localhost:5540
-- **MongoDB Admin**: http://localhost:8081 (admin/admin123)
 
 ---
 
