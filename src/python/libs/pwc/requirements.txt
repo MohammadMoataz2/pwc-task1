@@ -13,3 +13,4 @@ aiofiles>=23.0.0
 httpx>=0.25.0
 motor>=3.3.0
 passlib>=1.7.4
+PyPDF2

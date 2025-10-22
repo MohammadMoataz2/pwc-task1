@@ -31,7 +31,7 @@ class ClauseType(str, Enum):
 
 class ExtractedClause(BaseModel):
     """A single extracted clause from the contract"""
-    type: ClauseType
+    type: str
     content: str
     confidence: float
     page_number: Optional[int] = None

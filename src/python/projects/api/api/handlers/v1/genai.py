@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from pydantic import BaseModel
+import PyPDF2
+import io
 
 from ...core.security import get_current_user, TokenUser
 from pwc.ai import AIFactory
@@ -37,8 +39,29 @@ async def analyze_contract(
             detail="Only PDF files are supported"
         )
 
-    content = await file.read()
-    result = await ai_client.analyze_contract(content)
+    # Read PDF content as bytes
+    pdf_bytes = await file.read()
+
+    try:
+        # Extract text from PDF
+        pdf_reader = PyPDF2.PdfReader(io.BytesIO(pdf_bytes))
+        contract_text = ""
+        for page in pdf_reader.pages:
+            contract_text += page.extract_text() + "\n"
+
+        if not contract_text.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Could not extract text from PDF. Please ensure the PDF contains readable text."
+            )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error processing PDF: {str(e)}"
+        )
+
+    # Now pass the extracted text to AI client
+    result = await ai_client.analyze_contract(contract_text)
 
     return AnalysisResponse(
         clauses=[clause.model_dump() for clause in result.clauses],

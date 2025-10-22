@@ -12,12 +12,11 @@ class OpenAIClient(AIInterface):
         self.client = AsyncOpenAI(api_key=api_key)
         self.model = model
 
-    async def analyze_contract(self, pdf_content: bytes) -> ContractAnalysisResult:
+    async def analyze_contract(self, contract_text: str) -> ContractAnalysisResult:
         """Analyze contract PDF and extract clauses using OpenAI"""
 
         # Note: For now, we'll simulate PDF text extraction
         # In production, you'd use a PDF parser like PyPDF2 or pdfplumber
-        contract_text = "Sample contract text extracted from PDF"
 
         prompt = f"""
         Analyze the following contract and extract key clauses.
@@ -28,7 +27,7 @@ class OpenAIClient(AIInterface):
                 {{
                     "type": "clause_type",
                     "content": "clause_content",
-                    "confidence": 0.95
+                    "confidence": "confidence_score (0.0-1.0)"
                 }}
             ],
             "metadata": {{

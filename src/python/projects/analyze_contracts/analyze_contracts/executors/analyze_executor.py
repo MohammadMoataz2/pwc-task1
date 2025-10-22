@@ -37,7 +37,7 @@ class AnalyzeContractExecutor(ContractTaskExecutor):
             # Convert to our schema format
             clauses = [
                 ExtractedClause(
-                    type=ClauseType(clause.type) if clause.type in [e.value for e in ClauseType] else ClauseType.other,
+                    type=clause.type,
                     content=clause.content,
                     confidence=clause.confidence,
                     page_number=getattr(clause, 'page_number', None),

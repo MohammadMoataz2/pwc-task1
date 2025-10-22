@@ -23,9 +23,13 @@ WORKDIR /app
 ENV PATH=/home/appuser/.local/bin:$PATH
 ENV PYTHONPATH=/app/libs:$PYTHONPATH
 
-# Copy requirements and install as non-root user
-COPY --chown=appuser:appuser src/python/projects/analyze_contracts/requirements.txt .
-RUN pip install --user -r requirements.txt
+# Copy requirements files
+COPY --chown=appuser:appuser src/python/projects/analyze_contracts/requirements.txt ./worker_requirements.txt
+COPY --chown=appuser:appuser src/python/libs/pwc/requirements.txt ./pwc_requirements.txt
+
+# Install both worker and PWC library requirements
+RUN pip install --user -r worker_requirements.txt && \
+    pip install --user -r pwc_requirements.txt
 
 # Copy shared library
 COPY --chown=appuser:appuser src/python/libs/pwc /app/libs/pwc
