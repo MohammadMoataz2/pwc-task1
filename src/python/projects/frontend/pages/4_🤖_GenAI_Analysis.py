@@ -4,7 +4,7 @@ import streamlit as st
 import json
 from utils.auth import require_auth, get_current_user
 from utils.api_client import APIClient, handle_api_response
-
+import pandas as pd
 st.set_page_config(
     page_title="GenAI Analysis - PWC Contract Analysis",
     page_icon="🤖",

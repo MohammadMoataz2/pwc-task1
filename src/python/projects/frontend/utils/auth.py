@@ -99,10 +99,9 @@ def login(username: str, password: str, remember_me: bool = False) -> bool:
                 encoded_data = base64.b64encode(json.dumps(auth_data).encode()).decode()
                 st.session_state["persistent_auth"] = encoded_data
 
-            st.success("Login successful!")
             return True
         else:
-            handle_api_response(response)
+            # Don't show generic API error here, let the login page handle it
             return False
 
     except Exception as e:
@@ -120,9 +119,9 @@ def register(username: str, password: str, email: str = "") -> bool:
         })
 
         if response.status_code == 200:
-            st.success("Registration successful! Please login.")
             return True
         else:
+            # Let the API client handle error display, just return False
             handle_api_response(response)
             return False
 

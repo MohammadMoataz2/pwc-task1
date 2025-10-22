@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File,
 from beanie import PydanticObjectId
 from pydantic import BaseModel
 
-from ...core.security import get_current_user
+from ...core.security import get_current_user, TokenUser
 from ...db.models import Contract, Client
 from pwc.task_interface.schema import ContractState
 from pwc.storage import StorageFactory
@@ -47,7 +47,7 @@ class ContractStateUpdate(BaseModel):
 async def create_contract(
     file: UploadFile = File(...),
     client_id: Optional[str] = Form(None),
-    current_user: str = Depends(get_current_user)
+    current_user: TokenUser = Depends(get_current_user)
 ):
     """Upload and create a new contract"""
     if not file.filename:
@@ -87,7 +87,7 @@ async def create_contract(
         file_size=len(content),
         content_type=file.content_type,
         client_id=PydanticObjectId(client_id) if client_id else None,
-        uploaded_by=current_user
+        uploaded_by=current_user.username
     )
 
     await contract.insert()
@@ -110,10 +110,10 @@ async def list_contracts(
     skip: int = 0,
     limit: int = 100,
     status: Optional[str] = None,
-    current_user: str = Depends(get_current_user)
+    current_user: TokenUser = Depends(get_current_user)
 ):
     """List contracts with optional filtering"""
-    query = {"uploaded_by": current_user}  # Only show user's own contracts
+    query = {"uploaded_by": current_user.username}  # Only show user's own contracts
     if status:
         query["status"] = status
 
@@ -138,7 +138,7 @@ async def list_contracts(
 @router.get("/{contract_id}", response_model=ContractResponse)
 async def get_contract(
     contract_id: str,
-    current_user: str = Depends(get_current_user)
+    current_user: TokenUser = Depends(get_current_user)
 ):
     """Get a specific contract"""
     contract = await Contract.get(contract_id)
@@ -149,7 +149,7 @@ async def get_contract(
         )
 
     # Ensure user can only access their own contracts
-    if contract.uploaded_by != current_user:
+    if contract.uploaded_by != current_user.username:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied to this contract"
@@ -172,7 +172,7 @@ async def get_contract(
 async def update_contract_state(
     contract_id: str,
     state_update: ContractStateUpdate,
-    current_user: str = Depends(get_current_user)
+    current_user: TokenUser = Depends(get_current_user)
 ):
     """Update contract state (used by workers)"""
     contract = await Contract.get(contract_id)
@@ -195,7 +195,7 @@ async def update_contract_state(
 async def save_analysis_result(
     contract_id: str,
     analysis_result: dict,
-    current_user: str = Depends(get_current_user)
+    current_user: TokenUser = Depends(get_current_user)
 ):
     """Save contract analysis results"""
     contract = await Contract.get(contract_id)
@@ -217,7 +217,7 @@ async def save_analysis_result(
 async def save_evaluation_result(
     contract_id: str,
     evaluation_result: dict,
-    current_user: str = Depends(get_current_user)
+    current_user: TokenUser = Depends(get_current_user)
 ):
     """Save contract evaluation results"""
     contract = await Contract.get(contract_id)
@@ -238,7 +238,7 @@ async def save_evaluation_result(
 @router.post("/{contract_id}/init-genai")
 async def trigger_genai_analysis(
     contract_id: str,
-    current_user: str = Depends(get_current_user)
+    current_user: TokenUser = Depends(get_current_user)
 ):
     """Trigger GenAI analysis pipeline for a contract"""
     contract = await Contract.get(contract_id)

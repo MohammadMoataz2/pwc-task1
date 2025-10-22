@@ -42,8 +42,13 @@ if login_btn:
         st.error("Please enter both username and password")
     else:
         with st.spinner("Logging in..."):
-            if login(username, password, remember_me):
+            login_success = login(username, password, remember_me)
+            if login_success:
+                st.success("Login successful! Redirecting...")
                 st.rerun()
+            else:
+                st.error("❌ **Login Failed!** Invalid username or password. Please try again.")
+                st.info("💡 Check your credentials and try again. If you don't have an account, please register first.")
 
 # Demo credentials info
 with st.expander("Demo Credentials"):

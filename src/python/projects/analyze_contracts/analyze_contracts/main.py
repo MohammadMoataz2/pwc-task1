@@ -163,6 +163,11 @@ def report_contract_failure(self, error_message, task_info_dict):
         loop.close()
 
 
+# Print settings
+print("=== CELERY WORKER SETTINGS ===")
+print(settings)
+print("=== END CELERY WORKER SETTINGS ===")
+
 # Register tasks on import
 register_tasks()
 

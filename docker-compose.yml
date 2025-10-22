@@ -5,8 +5,8 @@ services:
     container_name: pwc_mongodb
     restart: unless-stopped
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
     ports:
       - "27017:27017"
     volumes:
@@ -33,12 +33,12 @@ services:
     ports:
       - "8081:8081"
     environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
-      ME_CONFIG_MONGODB_ADMINPASSWORD: password123
-      ME_CONFIG_MONGODB_URL: mongodb://admin:password123@mongodb:27017/
-      ME_CONFIG_BASICAUTH_USERNAME: admin
-      ME_CONFIG_BASICAUTH_PASSWORD: admin123
-      ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${ME_CONFIG_MONGODB_ADMINUSERNAME}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${ME_CONFIG_MONGODB_ADMINPASSWORD}
+      ME_CONFIG_MONGODB_URL: ${ME_CONFIG_MONGODB_URL}
+      ME_CONFIG_BASICAUTH_USERNAME: ${ME_CONFIG_BASICAUTH_USERNAME}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${ME_CONFIG_BASICAUTH_PASSWORD}
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: ${ME_CONFIG_MONGODB_ENABLE_ADMIN}
     depends_on:
       - mongodb
     networks:
@@ -53,15 +53,15 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - MONGODB_URL=mongodb://admin:password123@mongodb:27017/pwc_contracts?authSource=admin
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - STORAGE_TYPE=local
-      - LOCAL_STORAGE_PATH=/app/storage
-      - AI_PROVIDER=openai
+      - MONGODB_URL=${MONGODB_URL}
+      - REDIS_URL=${REDIS_URL}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+      - STORAGE_TYPE=${STORAGE_TYPE}
+      - LOCAL_STORAGE_PATH=${LOCAL_STORAGE_PATH}
+      - AI_PROVIDER=${AI_PROVIDER}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-this}
+      - SECRET_KEY=${SECRET_KEY}
     volumes:
       - api_storage:/app/storage
     depends_on:
@@ -82,18 +82,18 @@ services:
     container_name: pwc_worker
     restart: unless-stopped
     environment:
-      - MONGODB_URL=mongodb://admin:password123@mongodb:27017/pwc_contracts?authSource=admin
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - STORAGE_TYPE=local
-      - LOCAL_STORAGE_PATH=/app/storage
-      - AI_PROVIDER=openai
+      - MONGODB_URL=${MONGODB_URL}
+      - REDIS_URL=${REDIS_URL}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+      - STORAGE_TYPE=${STORAGE_TYPE}
+      - LOCAL_STORAGE_PATH=${LOCAL_STORAGE_PATH}
+      - AI_PROVIDER=${AI_PROVIDER}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - API_BASE_URL=http://api:8000
-      - PARSING_PROVIDER=${PARSING_PROVIDER:-library}
-      - ANALYSIS_PROVIDER=${ANALYSIS_PROVIDER:-openai}
-      - EVALUATION_PROVIDER=${EVALUATION_PROVIDER:-openai}
+      - API_BASE_URL=${API_BASE_URL}
+      - PARSING_PROVIDER=${PARSING_PROVIDER}
+      - ANALYSIS_PROVIDER=${ANALYSIS_PROVIDER}
+      - EVALUATION_PROVIDER=${EVALUATION_PROVIDER}
     volumes:
       - api_storage:/app/storage
     depends_on:
@@ -115,7 +115,7 @@ services:
     ports:
       - "8501:8501"
     environment:
-      - API_BASE_URL=http://api:8000
+      - API_BASE_URL=${API_BASE_URL}
     depends_on:
       - api
     networks:

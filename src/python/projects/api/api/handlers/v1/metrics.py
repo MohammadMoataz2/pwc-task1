@@ -3,7 +3,7 @@ from typing import Dict, Any, List
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
-from ...core.security import get_current_user
+from ...core.security import get_current_user, TokenUser
 from ...db.models import LogEntry, Contract, Client
 
 router = APIRouter()
@@ -32,14 +32,14 @@ class SystemMetricsResponse(BaseModel):
 
 
 @router.get("/user", response_model=UserMetricsResponse)
-async def get_user_metrics(current_user: str = Depends(get_current_user)):
+async def get_user_metrics(current_user: TokenUser = Depends(get_current_user)):
     """Get metrics for the current user"""
     now = datetime.now(timezone.utc)
     last_24h = now - timedelta(hours=24)
 
     # User request metrics from logs
     user_logs = await LogEntry.find(
-        LogEntry.user == current_user,
+        LogEntry.user == current_user.username,
         LogEntry.timestamp >= last_24h
     ).to_list()
 
@@ -47,18 +47,18 @@ async def get_user_metrics(current_user: str = Depends(get_current_user)):
     user_avg_latency = sum(log.response_time_ms for log in user_logs) / max(len(user_logs), 1)
 
     # User contract metrics
-    user_contract_count = await Contract.find(Contract.uploaded_by == current_user).count()
+    user_contract_count = await Contract.find(Contract.uploaded_by == current_user.username).count()
     user_processed_contracts = await Contract.find(
-        Contract.uploaded_by == current_user,
+        Contract.uploaded_by == current_user.username,
         Contract.status == "completed"
     ).count()
     user_failed_contracts = await Contract.find(
-        Contract.uploaded_by == current_user,
+        Contract.uploaded_by == current_user.username,
         Contract.status == "failed"
     ).count()
 
     # User client count
-    user_client_count = await Client.find(Client.created_by == current_user).count()
+    user_client_count = await Client.find(Client.created_by == current_user.username).count()
 
     # Top endpoints for user
     endpoint_counts = {}
@@ -86,7 +86,7 @@ async def get_user_metrics(current_user: str = Depends(get_current_user)):
 
 
 @router.get("/system", response_model=SystemMetricsResponse)
-async def get_system_metrics(current_user: str = Depends(get_current_user)):
+async def get_system_metrics(current_user: TokenUser = Depends(get_current_user)):
     """Get system-wide metrics (admin view)"""
     now = datetime.now(timezone.utc)
     last_24h = now - timedelta(hours=24)
@@ -165,6 +165,6 @@ async def get_system_metrics(current_user: str = Depends(get_current_user)):
 
 # Backwards compatibility
 @router.get("/", response_model=UserMetricsResponse)
-async def get_metrics(current_user: str = Depends(get_current_user)):
+async def get_metrics(current_user: TokenUser = Depends(get_current_user)):
     """Get user metrics (backwards compatible endpoint)"""
     return await get_user_metrics(current_user)

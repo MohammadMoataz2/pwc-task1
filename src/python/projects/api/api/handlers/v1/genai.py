@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from pydantic import BaseModel
 
-from ...core.security import get_current_user
+from ...core.security import get_current_user, TokenUser
 from pwc.ai import AIFactory
 from pwc.settings import settings
 
@@ -28,7 +28,7 @@ class EvaluationResponse(BaseModel):
 @router.post("/analyze-contract", response_model=AnalysisResponse)
 async def analyze_contract(
     file: UploadFile = File(...),
-    current_user: str = Depends(get_current_user)
+    current_user: TokenUser = Depends(get_current_user)
 ):
     """Analyze contract PDF and extract clauses"""
     if not file.content_type == "application/pdf":
@@ -49,7 +49,7 @@ async def analyze_contract(
 @router.post("/evaluate-contract", response_model=EvaluationResponse)
 async def evaluate_contract(
     clauses: list,
-    current_user: str = Depends(get_current_user)
+    current_user: TokenUser = Depends(get_current_user)
 ):
     """Evaluate contract health based on clauses"""
     # Convert dict clauses back to ContractClause objects

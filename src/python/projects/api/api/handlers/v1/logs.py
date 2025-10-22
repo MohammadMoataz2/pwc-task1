@@ -3,7 +3,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
-from ...core.security import get_current_user
+from ...core.security import get_current_user, TokenUser
 from ...db.models import LogEntry
 
 router = APIRouter()
@@ -27,7 +27,7 @@ async def get_logs(
     user: Optional[str] = Query(None),
     endpoint: Optional[str] = Query(None),
     status: Optional[int] = Query(None),
-    current_user: str = Depends(get_current_user)
+    current_user: TokenUser = Depends(get_current_user)
 ):
     """Get paginated logs with optional filters"""
     query = {}

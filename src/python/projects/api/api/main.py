@@ -26,6 +26,12 @@ logger = setup_logger(__name__)
 async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting PWC Contract Analysis API")
+
+    # Print settings
+    print("=== FASTAPI BACKEND SETTINGS ===")
+    print(settings)
+    print("=== END FASTAPI BACKEND SETTINGS ===")
+
     await init_database()
     app.celery_app = celery_app
     yield

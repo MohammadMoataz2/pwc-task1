@@ -209,9 +209,6 @@ with tab2:
                         st.write(f"- **Status:** {contract['status']}")
                         st.write(f"- **Client:** {client_name}")
                         st.write(f"- **Size:** {contract.get('file_size', 0) / 1024:.1f} KB")
-
-                    with col2:
-                        # Analysis results
                         if contract.get("analysis_result"):
                             st.write("**Analysis Results:**")
                             analysis = contract["analysis_result"]
@@ -222,7 +219,15 @@ with tab2:
                                 clause_types = [c.get("type", "unknown") for c in clauses]
                                 clause_counts = pd.Series(clause_types).value_counts()
                                 st.bar_chart(clause_counts)
+                                for i, clause in enumerate(clauses):
+                                    with st.expander(f"Clause {i+1}: {clause.get('type', 'Unknown').replace('_', ' ').title()}"):
+                                        st.write(f"**Type:** {clause.get('type', 'Unknown')}")
+                                        st.write(f"**Confidence:** {clause.get('confidence', 0):.2f}")
+                                        st.write(f"**Content:**")
+                                        st.write(clause.get('content', 'No content available'))
 
+                    with col2:
+                        
                         # Evaluation results
                         if contract.get("evaluation_result"):
                             st.write("**Evaluation Results:**")

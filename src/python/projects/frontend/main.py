@@ -1,8 +1,23 @@
 """Main Streamlit application"""
 
 import streamlit as st
+import sys
+import os
+from pathlib import Path
+
+# Add the shared library to the Python path
+current_dir = Path(__file__).parent
+libs_path = current_dir.parent.parent / "libs"
+sys.path.insert(0, str(libs_path))
+
+from pwc.settings import settings
 from config import PAGE_TITLE, PAGE_ICON, LAYOUT
 from utils.auth import is_authenticated
+
+# Print settings
+print("=== STREAMLIT FRONTEND SETTINGS ===")
+print(settings)
+print("=== END STREAMLIT FRONTEND SETTINGS ===")
 
 st.set_page_config(
     page_title=PAGE_TITLE,

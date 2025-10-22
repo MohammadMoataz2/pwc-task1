@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from beanie import PydanticObjectId
 from pydantic import BaseModel
 
-from ...core.security import get_current_user
+from ...core.security import get_current_user, TokenUser
 from ...db.models import Client, Contract
 
 router = APIRouter()
@@ -35,14 +35,14 @@ class ContractSummary(BaseModel):
 @router.post("/", response_model=ClientResponse)
 async def create_client(
     client_data: ClientCreate,
-    current_user: str = Depends(get_current_user)
+    current_user: TokenUser = Depends(get_current_user)
 ):
     """Create a new client"""
     client = Client(
         name=client_data.name,
         email=client_data.email,
         company=client_data.company,
-        created_by=current_user
+        created_by=current_user.username
     )
     await client.insert()
 
@@ -58,10 +58,10 @@ async def create_client(
 
 @router.get("/", response_model=List[ClientResponse])
 async def list_clients(
-    current_user: str = Depends(get_current_user)
+    current_user: TokenUser = Depends(get_current_user)
 ):
     """Get all clients for the current user"""
-    clients = await Client.find(Client.created_by == current_user).to_list()
+    clients = await Client.find(Client.created_by == current_user.username).to_list()
 
     return [
         ClientResponse(
@@ -79,7 +79,7 @@ async def list_clients(
 @router.get("/{client_id}/contracts", response_model=List[ContractSummary])
 async def get_client_contracts(
     client_id: str,
-    current_user: str = Depends(get_current_user)
+    current_user: TokenUser = Depends(get_current_user)
 ):
     """Get all contracts for a specific client"""
     client = await Client.get(client_id)
@@ -90,7 +90,7 @@ async def get_client_contracts(
         )
 
     # Ensure user can only access their own clients
-    if client.created_by != current_user:
+    if client.created_by != current_user.username:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied to this client"

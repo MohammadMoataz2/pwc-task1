@@ -43,10 +43,15 @@ if register_btn:
         st.error("Password must be at least 6 characters long")
     else:
         with st.spinner("Creating account..."):
-            if register(username, password, email):
+            registration_success = register(username, password, email)
+            if registration_success:
+                st.success("✅ **Registration Successful!** Your account has been created.")
                 st.balloons()
-                if st.button("Go to Login"):
+                if st.button("Go to Login", type="primary", use_container_width=True):
                     st.switch_page("pages/1_🔐_Login.py")
+            else:
+                st.error("❌ **Registration Failed!** Please check the error message above and try again.")
+                st.info("💡 Make sure your username is unique and not already taken.")
 
 # Registration guidelines
 with st.expander("Registration Guidelines"):

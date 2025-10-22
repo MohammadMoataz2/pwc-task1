@@ -79,10 +79,10 @@ async def login_user(form_data: OAuth2PasswordRequestForm = Depends()):
             detail="Inactive user"
         )
 
-    # Create access token
+    # Create access token with enhanced user information
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        user_data=user, expires_delta=access_token_expires
     )
 
     return {
