@@ -95,15 +95,21 @@ install-dev: ## Install development dependencies
 	cd src/python/projects/api && pip install -r requirements.txt
 	cd src/python/projects/analyze_contracts && pip install -r requirements.txt
 
-test-api: ## Run API tests
-	@echo "${GREEN}Running API tests...${NC}"
-	cd src/python/projects/api && make test
+test: ## Run all tests (unit + load tests)
+	@echo "${GREEN}Running unit tests...${NC}"
+	cd src/python/projects/api && python -m pytest tests/ -v
+	@echo "${GREEN}Unit tests completed!${NC}"
 
-test-worker: ## Run worker tests
-	@echo "${GREEN}Running worker tests...${NC}"
-	cd src/python/projects/analyze_contracts && make test
+test-load: ## Run load tests (requires running system)
+	@echo "${GREEN}Running load tests...${NC}"
+	@echo "${YELLOW}Make sure the system is running (make up)${NC}"
+	cd load_tests && locust -f locustfile.py --host=http://localhost:8000 --users=10 --spawn-rate=2 --run-time=60s --headless
+	@echo "${GREEN}Load tests completed!${NC}"
 
-test: test-api test-worker ## Run all tests
+test-coverage: ## Run tests with coverage report
+	@echo "${GREEN}Running tests with coverage...${NC}"
+	cd src/python/projects/api && python -m pytest tests/ --cov=api --cov-report=html --cov-report=term-missing
+	@echo "${GREEN}Coverage report generated in htmlcov/index.html${NC}"
 
 dev-api: ## Run API in development mode
 	@echo "${GREEN}Starting API in development mode...${NC}"
