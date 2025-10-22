@@ -31,8 +31,8 @@ A **production-ready contract analysis system** that demonstrates:
 
 ### **1. Clone & Setup**
 ```bash
-git clone <repository>
-cd PWC/task2
+git clone https://github.com/MohammadMoataz2/pwc-task1.git
+cd pwc-task1
 
 # With Make (if available)
 make setup
