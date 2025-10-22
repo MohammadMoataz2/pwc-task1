@@ -138,12 +138,7 @@ dmypy.json
 ehthumbs.db
 Thumbs.db
 
-# Storage
-storage/
-uploads/
-*.pdf
-*.doc
-*.docx
+
 
 # Docker
 .dockerignore
