@@ -2,7 +2,7 @@
 name = "pwc-contract-analysis"
 version = "1.0.0"
 description = "PWC GenAI Contract Analysis System - Enterprise-grade contract analysis platform"
-authors = ["PWC Team <team@pwc.com>"]
+authors = ["PWC Team "]
 readme = "README.md"
 packages = [
     {include = "pwc", from = "src/python/libs"},
