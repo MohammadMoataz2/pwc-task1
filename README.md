@@ -283,7 +283,11 @@ task_registry.register_task(
     logger_factory=lambda: setup_logger()
 )
 ```
-
+## **Note**
+Due to time constraints, several enhancements were planned but not
+  implemented: enhanced Pydantic model organization and meta data, comprehensive prompt management system
+  with versioning and A/B testing, and migration to Pants build system
+  for better monorepo management with containerless development mode.
 ---
 
 ## 🧪 **Testing**
