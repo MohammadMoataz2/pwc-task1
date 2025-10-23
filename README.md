@@ -106,10 +106,14 @@ docker-compose up -d
 
 ![Admin Dashboard](imgs/admin_dashbaord_metrics.png) ![Admin Health](imgs/admin_dashboard_health.png)
 
-![Admin Logs](imgs/admin_dashboard_logs.png) ![Flower Monitoring](imgs/flower_monitoring.png)
-
-![Redis Insight](imgs/redis_insight.png) ![Mongo Collections](imgs/mongo_collections.png)
-
+![Admin Logs](imgs/admin_dashboard_logs.png) 
+## Flower
+![Flower Monitoring](imgs/flower_monitoring.png)
+## Redis Insight
+![Redis Insight](imgs/redis_insight.png) 
+## Mongo Express
+![Mongo Collections](imgs/mongo_collections.png)
+## Docker Containers
 ![Docker Containers](imgs/containers.png)
 
 ---
