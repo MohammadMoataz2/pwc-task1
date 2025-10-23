@@ -77,23 +77,25 @@ docker-compose up -d
 
 ![Login Page](imgs/login_page.png) ![Register Page](imgs/register_page.png)
 
-### 🤖 **GenAI Contract Analysis**
+### 🤖 **GenAI Contract Analysis (Sync) The Async Analyze Is in the Contracts Page**
 - **PDF Contract Upload** with validation and storage
-- **Clause Extraction** using OpenAI Client
+- **Clause Extraction** 
 - **Contract Health Evaluation** with approval recommendations
 - **Structured JSON responses** with confidence scores
 
 ![Sync Analysis](imgs/sync_analyze_page.png) ![Sync Evaluation](imgs/sync_evalutaion_page.png)
 
-### 📄 **Contract Management**
-- Full CRUD operations for contracts
+### 📄 **Contract Analyze (Async) And  Management**
+
 - **Async processing pipeline** for large documents
 - File storage with factory pattern (Local/S3-ready)
 - Contract state management and tracking
+- 
+![Upload & Async Analysis](imgs/upload_full_async_analyze_page.png) ![Client Management](imgs/clients_mng_page.png)
 
+- **Press The Refresh Button to See The Status and The Result Of the Contract You Send Them To Pipeline**
 ![My Contracts](imgs/MyContracts_page.png) ![Contract Details](imgs/MyContract2_page.png)
 
-![Upload & Async Analysis](imgs/upload_full_async_analyze_page.png) ![Client Management](imgs/clients_mng_page.png)
 
 ### 📊 **System Monitoring**
 - **Real-time metrics** through Flower (Celery monitoring)
