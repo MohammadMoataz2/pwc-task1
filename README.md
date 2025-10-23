@@ -91,11 +91,11 @@ docker-compose up -d
 - File storage with factory pattern (Local/S3-ready)
 - Contract state management and tracking
 - 
-![Upload & Async Analysis](imgs/upload_full_async_analyze_page.png) ![Client Management](imgs/clients_mng_page.png)
+![Upload & Async Analysis](imgs/upload_full_async_analyze_page.png)
 
 - **Press The Refresh Button to See The Status and The Result Of the Contract You Send Them To Pipeline**
 ![My Contracts](imgs/MyContracts_page.png) ![Contract Details](imgs/MyContract2_page.png)
-
+![Client Management](imgs/clients_mng_page.png)
 
 ### 📊 **System Monitoring**
 - **Real-time metrics** through Flower (Celery monitoring)
