@@ -287,7 +287,7 @@ task_registry.register_task(
 Due to time constraints, several enhancements were planned but not
   implemented: enhanced Pydantic model organization and meta data, comprehensive prompt management system
   with versioning and A/B testing, and migration to Pants build system
-  for better monorepo management with containerless development mode.
+  for better monorepo management with containerless development mode, use several and better parsing, analyze, evaluate techniques by ML, LLMS, etc....
 ---
 
 ## 🧪 **Testing**
